@@ -1,6 +1,6 @@
 const express = require('express');
 const session = require('express-session');
-const errorCreator = require('http-errors');
+const createError = require('http-errors');
 const logger = require('morgan');
 const path = require('path');
 const fs = require('fs');
@@ -16,10 +16,10 @@ app.set('view engine', 'pug');
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
-const log = fs.createWriteStream('logile.log', {flags: 'a'})
+const log = fs.createWriteStream('logile.log', {flags: 'a'});
 app.use(logger('combined', {stream: log}));
 
-app.use(express.static(path.join(__dirname, '../public')));
+app.use(express.static(path.join(__dirname, '../client/public')));
 
 app.use(
     session({
@@ -38,7 +38,7 @@ app.use(
 app.use('/', require('./routes'));
 
 app.use((req, res, next) => {
-    next(errorCreator(404));
+    next(createError(404));
 });
 
 app.use((err, req, res) => {
@@ -46,10 +46,10 @@ app.use((err, req, res) => {
     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
     res.status(err.status || 500);
-    res.render('pages/error');
+    res.render('pages/error', err);
 })
 
-const server = app.listen(process.env.PORT || 8000, () => {
+const server = app.listen(process.env.PORT || 8080, () => {
     console.log(`Server is running on ${server.address().port} port`);
 })
 

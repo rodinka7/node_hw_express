@@ -12,6 +12,7 @@ const unlink = promisify(fs.unlink);
 const rename = promisify(fs.rename);
 
 const upload = require('../../db').models.upload;
+const errors = require('../vars');
 
 function validate(fields, files){
     const schema = Joi.object().keys({
@@ -32,7 +33,7 @@ function validate(fields, files){
 
 module.exports = async response => {
     const form = new formidable.IncomingForm();
-    const upload = path.join(__dirname, '../../../source/images/products');
+    const upload = path.join(__dirname, '../../../client/source/images/products');
     try {
         await access(upload);
     } catch(err){
@@ -63,7 +64,7 @@ module.exports = async response => {
                 ...fields
             })
             .then(() => response.reply({}))
-            .catch(error => response.replyErr(error));
+            .catch(err => response.replyErr(errors[err]));
         }
     })
 }

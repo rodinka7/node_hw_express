@@ -12,11 +12,11 @@ router.get('/login', (req, res) => {
     CTRL.emit('login/get', req.session)
     .then(data => {
         if (data.isAuthorized)
-            res.redirect('/admin')
+            res.redirect('/admin');
         else
             res.render('pages/login');
     })
-    .catch(error => res.render('pages/error', {message: error.message}))
+    .catch(error => res.render('pages/error', { message: error.message }));
 });
 
 router.get('/admin', (req, res) => {
@@ -28,13 +28,13 @@ router.get('/admin', (req, res) => {
             res.render('pages/admin', data);
         }
     })
-    .catch(error => res.render('pages/error', {message: error.message}))
+    .catch(error => res.render('pages/error', error))
 });
 
 router.post('/', (req, res) => {
     CTRL.emit('index/post', req.body)
     .then(() => res.redirect('/'))
-    .catch(error => res.status(error.status || 400).render('pages/error', { message: error.message, status: error.status }))
+    .catch(error => res.status(error.status || 400).render('pages/error', error))
 });
 
 router.post('/login', (req, res) => {
@@ -45,19 +45,19 @@ router.post('/login', (req, res) => {
             res.redirect('/admin');
         }
     })
-    .catch(error => res.status(error.status || 400).render('pages/error', { message: error.message, status: error.status }))
+    .catch(error => res.status(error.status || 400).render('pages/error', error))
 });
 
 router.post('/admin/skills', (req, res) => {
     CTRL.emit('admin/skills', req.body)
     .then(() => res.redirect('/admin'))
-    .catch(error => res.status(error.status || 400).render('pages/error', { message: error.message, status: error.status }))
+    .catch(error => res.status(error.status || 400).render('pages/error', error))
 });
 
 router.post('/admin/upload', (req, res) => {
     CTRL.emit('admin/upload', req)
     .then(() => res.redirect('/admin'))
-    .catch(error => res.status(error.status || 400).render('pages/error', { message: error.message, status: error.status }))
+    .catch(error => res.status(error.status || 400).render('pages/error', error))
 });
 
 router.get('/favicon.ico', (req, res) => {

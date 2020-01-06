@@ -14,6 +14,9 @@ const sequelize = new Sequelize(`postgres://${config.username}:${config.password
 let models = {};
 const modelsFolderPath = './models';
 
+const NOT_FOUND = 'not_found';
+const BAD_GATEWAY = 'bad_gateway';
+
 fs
   .readdirSync(path.join(__dirname, modelsFolderPath))
   .forEach(file => {
@@ -36,7 +39,7 @@ DATABASE.on('get/all', async response => {
       products
     });
   } catch(error){
-    response.replyErr(error);
+    response.replyErr(NOT_FOUND);
   }
 });
 
@@ -45,7 +48,7 @@ DATABASE.on('get/skills', async response => {
     const skills = await models.skill.findOne();
     response.reply(skills);
   } catch(error){
-    response.replyErr(error);
+    response.replyErr(NOT_FOUND);
   }
 });
 
@@ -55,7 +58,7 @@ DATABASE.on('skills/update', async response => {
     await models.skill.update({age, concerts, cities, years} = response.data, {where: {id}});
     response.reply({});
   } catch(error){
-    response.replyErr({ message: 'При сохранении данных возникла ошибка!', status: 400 });
+    response.replyErr(BAD_GATEWAY);
   }
 });
 
@@ -64,7 +67,7 @@ DATABASE.on('upload/add', async response => {
     await models.upload.create(response.data);
     response.reply({});
   } catch(error){
-    response.replyErr({ message: 'При сохранении данных возникла ошибка!', status: 400 });
+    response.replyErr(BAD_GATEWAY);
   }
 });
 
@@ -73,7 +76,7 @@ DATABASE.on('message/add', async response => {
     await models.message.create(response.data);
     response.reply({});
   } catch(error){
-    response.replyErr({ message: 'При сохранении данных возникла ошибка!', status: 400 });
+    response.replyErr(BAD_GATEWAY);
   }
 });
 

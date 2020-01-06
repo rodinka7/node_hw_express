@@ -1,6 +1,8 @@
 const db = global.DB;
+const errors = require('../vars');
+
 module.exports = response => {
     db.emit('get/all')
     .then(data => response.reply(data))
-    .catch(error => response.replyErr(error));
+    .catch(err => response.replyErr(errors[err]));
 }

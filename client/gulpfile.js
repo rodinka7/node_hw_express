@@ -13,7 +13,7 @@ global.$ = {
     app: require('./gulp/paths/app.js')
   },
   gulp: require('gulp'),
-  del: require('del'),
+  del: require('./node_modules/del'),
   merge: require('merge-stream'),
   browserify : require('browserify'),
   source : require('vinyl-source-stream'),

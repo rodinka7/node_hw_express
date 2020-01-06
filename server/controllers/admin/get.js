@@ -1,4 +1,5 @@
 const db = global.DB;
+const errors = require('../vars');
 
 module.exports = async response => {
     const isAuthorized = response.data.isAuthorized ? true : false;
@@ -7,6 +8,6 @@ module.exports = async response => {
     } else {
         db.emit('get/skills')
         .then(data => response.reply({isAuthorized, skills: data}))
-        .catch(error => response.replyErr(error));
+        .catch(err => response.replyErr(errors[err]));
     }
 }

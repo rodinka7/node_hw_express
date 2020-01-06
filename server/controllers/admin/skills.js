@@ -1,5 +1,6 @@
 const db = global.DB;
 const Joi = require('@hapi/joi');
+const errors = require('../vars');
 
 module.exports = async response => {
     const schema = Joi.object().keys({
@@ -18,5 +19,5 @@ module.exports = async response => {
 
     db.emit('skills/update', data)
     .then(() => response.reply({}))
-    .catch(error => response.replyErr(error));
+    .catch(err => response.replyErr(errors[err]));
 }
