@@ -1,55 +1,52 @@
-const express = require('express');
-const session = require('express-session');
-const createError = require('http-errors');
-const logger = require('morgan');
+const Koa = require('koa');
+const serve = require('koa-static');
+const session = require('koa-session');
+const Pug = require('koa-pug');
 const path = require('path');
 const fs = require('fs');
 
-const db = require('./db');
-const controllers = require('./controllers');
+const app = new Koa();
+const pug = new Pug({
+    viewPath: './views',
+    pretty: false,
+    noCache: true,
+    app: app
+});
 
-const app = express();
+const { promisify } = require('util');
+const access = promisify(fs.access);
+const mkdir = promisify(fs.mkdir);
 
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+require('./db');
+require('./controllers');
+const router = require('./routes');
+const config = require('./config');
+const errorHandler = require('./libs/error');
 
-app.use(express.json());
-app.use(express.urlencoded({extended: false}));
+const port = process.env.PORT || 8000;
 
-const log = fs.createWriteStream('logile.log', {flags: 'a'});
-app.use(logger('combined', {stream: log}));
+app.use(serve(path.join(__dirname, '../client/public')));
+app.use(errorHandler);
 
-app.use(express.static(path.join(__dirname, '../client/public')));
-
-app.use(
-    session({
-        secret: process.env.SESSION_SECRET,
-        key: process.env.SESSION_KEY,
-        cookie: {
-            path: '/',
-            httpOnly: true,
-            maxAge: 10 * 60 * 1000
-        },
-        saveUninitialized: false,
-        resave: false
+app.on('error', async (err, ctx) =>
+    await ctx.render('error', {
+        status: ctx.response.status,
+        error: ctx.response.message
     })
 );
 
-app.use('/', require('./routes'));
+app
+    .use(session(config.session, app))
+    .use(router.routes())
+    .use(router.allowedMethods());
 
-app.use((req, res, next) => {
-    next(createError(404));
-});
+app.listen(port, async () => {
+    try{
+        await access(config.upload);
+    } catch(err){
+        await mkdir(config.upload);
+    }
 
-app.use((err, req, res) => {
-    res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-    res.status(err.status || 500);
-    res.render('pages/error', err);
-})
-
-const server = app.listen(process.env.PORT || 8080, () => {
-    console.log(`Server is running on ${server.address().port} port`);
+    console.log(`Server is running on ${port} port`);
 })
 

@@ -1,84 +1,98 @@
-const Sequelize = require('sequelize');
-const fs = require('fs');
-const path = require('path');
-
 const ee = require('@nauma/eventemitter');
 const DATABASE = new ee.EventEmitter('database');
 global.DB = DATABASE;
 
-const env = process.env.NODE_ENV || 'development';
-const config = require(path.join(__dirname, 'config.js'))[env];
+const mongoose = require('mongoose');
 
-const sequelize = new Sequelize(`postgres://${config.username}:${config.password}@${config.host}/${config.database}`, config);
-
-let models = {};
-const modelsFolderPath = './models';
+const Skill = require('./models/skill');
+const Upload = require('./models/upload');
+const Message = require('./models/message');
 
 const NOT_FOUND = 'not_found';
 const BAD_GATEWAY = 'bad_gateway';
 
-fs
-  .readdirSync(path.join(__dirname, modelsFolderPath))
-  .forEach(file => {
-    let model = sequelize['import'](path.join(__dirname, modelsFolderPath, file));
-    models[model.name] = model;
-  });
+mongoose.Promise = global.Promise;
 
-Object.keys(models).forEach(modelName => {
-  if (models[modelName].associate) {
-    models[modelName].associate(models);
-  }
-});
+mongoose
+  .set('useNewUrlParser', true)
+  .set('useUnifiedTopology', true);
+
+mongoose.connect('mongodb://localhost:27017/koadb');
 
 DATABASE.on('get/all', async response => {
-  try {
-    const skills = await models.skill.findOne();
-    const products = await models.upload.findAll();
-    response.reply({
-      skills,
-      products
-    });
-  } catch(error){
-    response.replyErr(NOT_FOUND);
-  }
+  Upload.find((err, products) => {
+    if (err){
+      console.log('get/all', err);
+      response.replyErr(NOT_FOUND);
+    }
+
+    Skill.findOne((err, skills) => {
+      if (err){
+        console.log('get/all', err);
+        response.replyErr(NOT_FOUND);
+      }
+
+      response.reply({
+        skills: skills || {},
+        products: products || []
+      });
+    })
+  })
 });
 
 DATABASE.on('get/skills', async response => {
-  try {
-    const skills = await models.skill.findOne();
-    response.reply(skills);
-  } catch(error){
-    response.replyErr(NOT_FOUND);
-  }
+  Skill.findOne((err, skills) => {
+    if (err){
+      console.log('get/skills', err);
+      response.replyErr(NOT_FOUND);
+    }
+
+    response.reply(skills || {});
+  })
 });
 
 DATABASE.on('skills/update', async response => {
-  const id = response.data.id;
-  try {
-    await models.skill.update({age, concerts, cities, years} = response.data, {where: {id}});
-    response.reply({});
-  } catch(error){
-    response.replyErr(BAD_GATEWAY);
+  const id = response.data._id;
+
+  if (id){
+    Skill.updateOne(
+        {'_id': id},
+        {age, concerts, cities, years} = response.data,
+        (err, skills) => {
+          if (err){
+            console.log('skills/update', err);
+            response.replyErr(BAD_GATEWAY);
+          }
+          response.reply({});
+        }
+    );
+  } else {
+      delete response.data._id;
+      try {
+        await Skill.create({age, concerts, cities, years} = response.data);
+        response.reply({});
+      } catch (error){
+        console.log(error);
+        response.replyErr(BAD_GATEWAY);
+      }
   }
 });
 
 DATABASE.on('upload/add', async response => {
   try {
-    await models.upload.create(response.data);
+    await Upload.create(response.data);
     response.reply({});
   } catch(error){
+    console.log(error);
     response.replyErr(BAD_GATEWAY);
   }
 });
 
 DATABASE.on('message/add', async response => {
   try {
-    await models.message.create(response.data);
+    await Message.create(response.data);
     response.reply({});
   } catch(error){
     response.replyErr(BAD_GATEWAY);
   }
 });
-
-sequelize.models = models;
-module.exports = sequelize;

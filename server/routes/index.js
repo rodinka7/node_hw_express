@@ -1,68 +1,70 @@
-const express = require('express');
-const router = express.Router();
+const Router = require('koa-router');
+const router = new Router();
+const koaBody = require('koa-body');
+const config = require('../config');
+
 const CTRL = global.CTRL;
 
-router.get('/', (req, res) => {
-    CTRL.emit('index/get', req.session)
-    .then(data => res.render('pages/index', data))
-    .catch(error => res.render('pages/error', { message: error.message }));
+router.get('/', async (ctx, next) => {
+    await CTRL.emit('index/get')
+    .then(async data => await ctx.render('index', data))
+    .catch(error => ctx.render('error', { message: error.message }));
 });
 
-router.get('/login', (req, res) => {
-    CTRL.emit('login/get', req.session)
-    .then(data => {
+router.get('/login', async (ctx, next) => {
+    await CTRL.emit('login/get', ctx.session)
+    .then(async data => {
         if (data.isAuthorized)
-            res.redirect('/admin');
+            ctx.redirect('/admin');
         else
-            res.render('pages/login');
+            await ctx.render('login');
     })
-    .catch(error => res.render('pages/error', { message: error.message }));
+    .catch(async error => await ctx.render('error', { message: error.message }));
 });
 
-router.get('/admin', (req, res) => {
-    CTRL.emit('admin/get', req.session)
-    .then(data => {
+router.get('/admin', async (ctx, next) => {
+    await CTRL.emit('admin/get', ctx.session)
+    .then(async data => {
         if (!data.isAuthorized)
-            res.redirect('/login');
-        else {
-            res.render('pages/admin', data);
-        }
+            ctx.redirect('/login');
+        else
+            await ctx.render('admin', data);
     })
-    .catch(error => res.render('pages/error', error))
+    .catch(async error => await ctx.render('error', error))
 });
 
-router.post('/', (req, res) => {
-    CTRL.emit('index/post', req.body)
-    .then(() => res.redirect('/'))
-    .catch(error => res.status(error.status || 400).render('pages/error', error))
+router.post('/', koaBody(), async (ctx, next) => {
+    await CTRL.emit('index/post', ctx.request.body)
+    .then(() => ctx.redirect('/'))
+    .catch(async error => await ctx.status(error.status || 400).render('error', error))
 });
 
-router.post('/login', (req, res) => {
-    CTRL.emit('login/post', req.body)
+router.post('/login', koaBody(), async (ctx, next) => {
+    await CTRL.emit('login/post', ctx.request.body)
     .then(data => {
         if (data.isAuthorized){
-            req.session.isAuthorized = true;
-            res.redirect('/admin');
+            ctx.session.isAuthorized = true;
+            ctx.redirect('/admin');
         }
     })
-    .catch(error => res.status(error.status || 400).render('pages/error', error))
+    .catch(async error => await ctx.status(error.status || 400).render('error', error))
 });
 
-router.post('/admin/skills', (req, res) => {
-    CTRL.emit('admin/skills', req.body)
-    .then(() => res.redirect('/admin'))
-    .catch(error => res.status(error.status || 400).render('pages/error', error))
+router.post('/admin/skills', koaBody(), async (ctx, next) => {
+    await CTRL.emit('admin/skills', ctx.request.body)
+    .then(() => ctx.redirect('/admin'))
+    .catch(async error => await ctx.status(error.status || 400).render('error', error))
 });
 
-router.post('/admin/upload', (req, res) => {
-    CTRL.emit('admin/upload', req)
-    .then(() => res.redirect('/admin'))
-    .catch(error => res.status(error.status || 400).render('pages/error', error))
-});
-
-router.get('/favicon.ico', (req, res) => {
-    res.status(204);
-    res.end();
+router.post('/admin/upload', koaBody({
+    multipart: true,
+    formidable: {
+        uploadDir: config.upload
+    }
+}), async (ctx, next) => {
+    await CTRL.emit('admin/upload', ctx.request)
+    .then(() => ctx.redirect('/admin'))
+    .catch(async error => await ctx.status(error.status || 400).render('error', error))
 });
 
 module.exports = router;

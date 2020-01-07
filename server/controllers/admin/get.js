@@ -1,5 +1,5 @@
 const db = global.DB;
-const errors = require('../vars');
+const errors = require('../errors');
 
 module.exports = async response => {
     const isAuthorized = response.data.isAuthorized ? true : false;
