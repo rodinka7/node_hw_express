@@ -1,4 +1,4 @@
-extends ../_template-admin
+extends ./templates/_template-admin
 
 block variables
   - var title = 'Admin page'
@@ -28,7 +28,7 @@ block content
             label.form-skill__input-line 
               span.form-skill__input-title Лет на сцене
               input(name="years" type="number" value=skills.years min="0").form-skill__input
-            input(name="id" type="hidden" value=skills.id)
+            input(name="_id" type="hidden" value=skills._id)
             .form__btns.form-skill__input-line
               button(type="submit").button Сохранить
           form.form-upload(action='/admin/upload' method="POST" enctype="multipart/form-data")

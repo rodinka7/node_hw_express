@@ -1,6 +1,6 @@
 const db = global.DB;
 const Joi = require('@hapi/joi');
-const errors = require('../vars');
+const { errors } = require('../../config');
 
 module.exports = async response => {
     const schema = Joi.object().keys({
