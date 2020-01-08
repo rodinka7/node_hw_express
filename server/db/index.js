@@ -8,8 +8,7 @@ const Skill = require('./models/skill');
 const Upload = require('./models/upload');
 const Message = require('./models/message');
 
-const NOT_FOUND = 'not_found';
-const BAD_GATEWAY = 'bad_gateway';
+const { NOT_FOUND, BAD_GATEWAY } = require('../config');
 
 mongoose.Promise = global.Promise;
 

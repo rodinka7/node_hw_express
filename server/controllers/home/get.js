@@ -1,5 +1,5 @@
 const db = global.DB;
-const errors = require('../errors');
+const { errors } = require('../../config');
 
 module.exports = response => {
     db.emit('get/all')

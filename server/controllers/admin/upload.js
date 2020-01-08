@@ -8,8 +8,7 @@ const { promisify } = require('util');
 const unlink = promisify(fs.unlink);
 const rename = promisify(fs.rename);
 
-const errors = require('../errors');
-const config = require('../../config');
+const { errors, upload } = require('../../config');
 
 function validate(data){
     const schema = Joi.object().keys({
@@ -37,12 +36,12 @@ module.exports = async response => {
         response.replyErr({message: 'При загрузке данных на сервер произошла ошибка!'});
     } else {
         const reader = fs.createReadStream(filePath);
-        const stream = fs.createWriteStream(path.join(config.upload, fileName));
+        const stream = fs.createWriteStream(path.join(upload, fileName));
         reader.pipe(stream);
         console.log('uploading %s -> %s', fileName, stream.path);
 
         try {
-            await rename(filePath, path.join(config.upload, fileName));
+            await rename(filePath, path.join(upload, fileName));
         } catch(err){
             response.replyErr(err)
         }

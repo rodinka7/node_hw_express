@@ -36,7 +36,10 @@ router.get('/admin', async (ctx, next) => {
 router.post('/', koaBody(), async (ctx, next) => {
     await CTRL.emit('index/post', ctx.request.body)
     .then(() => ctx.redirect('/'))
-    .catch(async error => await ctx.status(error.status || 400).render('error', error))
+    .catch(async error => {
+        ctx.status = error.status || 400;
+        await ctx.render('error', error);
+    })
 });
 
 router.post('/login', koaBody(), async (ctx, next) => {
@@ -47,13 +50,19 @@ router.post('/login', koaBody(), async (ctx, next) => {
             ctx.redirect('/admin');
         }
     })
-    .catch(async error => await ctx.status(error.status || 400).render('error', error))
+    .catch(async error => {
+        ctx.status = error.status || 400;
+        await ctx.render('error', error);
+    })
 });
 
 router.post('/admin/skills', koaBody(), async (ctx, next) => {
     await CTRL.emit('admin/skills', ctx.request.body)
     .then(() => ctx.redirect('/admin'))
-    .catch(async error => await ctx.status(error.status || 400).render('error', error))
+    .catch(async error => {
+        ctx.status = error.status || 400;
+        await ctx.render('error', error);
+    })
 });
 
 router.post('/admin/upload', koaBody({
@@ -64,7 +73,10 @@ router.post('/admin/upload', koaBody({
 }), async (ctx, next) => {
     await CTRL.emit('admin/upload', ctx.request)
     .then(() => ctx.redirect('/admin'))
-    .catch(async error => await ctx.status(error.status || 400).render('error', error))
+    .catch(async error => {
+        ctx.status = error.status || 400;
+        await ctx.render('error', error);
+    })
 });
 
 module.exports = router;
